@@ -10,7 +10,7 @@ GitHub is a widely used platform for collaborative software development, hosting
 
 ## Resources & Links
 
-- [The kaggle challange with the training datasets](https://www.kaggle.com/c/predict-closed-questions-on-stack-overflow/overview) - I used `train_sample.csv`
+- [The kaggle challenge with the training datasets](https://www.kaggle.com/c/predict-closed-questions-on-stack-overflow/overview) - I used `train_sample.csv`
 
 ## Recreating the repository
 
