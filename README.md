@@ -19,6 +19,7 @@ Follow these steps to get started with the project:
 1. **Clone the Repository:**
   ```bash
   git clone https://github.com/Pawcharz/Github-Questions-Classification.git
-  cd Github-Questions-Classification```
+  cd Github-Questions-Classification
+  ```
 
 2. **Copy required data files from kaggle to data/processed directory** (More will be added with the further development of the project)
