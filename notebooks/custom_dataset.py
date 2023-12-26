@@ -15,15 +15,15 @@ def encodeTags(dataframe):
     
   return encoded
 
-class SingleGithubExample:
-  def __init__(self, tags_onehot, unrecognized_tags_count, reputation, undeleted_answers, user_life_days, title, text_content):
-    self.tags_onehot = tags_onehot
-    self.unrecognized_tags_count = unrecognized_tags_count
-    self.reputation = reputation
-    self.undeleted_answers = undeleted_answers
-    self.user_life_days = user_life_days
-    self.title = title
-    self.text_content = text_content
+# class SingleGithubExample:
+#   def __init__(self, tags_onehot, unrecognized_tags_count, reputation, undeleted_answers, user_life_days, title, text_content):
+#     self.tags_onehot = tags_onehot
+#     self.unrecognized_tags_count = unrecognized_tags_count
+#     self.reputation = reputation
+#     self.undeleted_answers = undeleted_answers
+#     self.user_life_days = user_life_days
+#     self.title = title
+#     self.text_content = text_content
     
 
 class GithubDataset(Dataset):
@@ -49,19 +49,19 @@ class GithubDataset(Dataset):
     self.user_life_days = torch.from_numpy(df['DaysTillPosting'].to_numpy())
     
     # Saving Text
-    self.title = df['Title']
-    self.text_content = df['BodyMarkdown']
+    self.title = df['Title'].to_numpy()
+    self.text_content = df['BodyMarkdown'].to_numpy()
     
   def __len__(self):
     return len(self.tags_onehot)
 
   def __getitem__(self, i):
-    return SingleGithubExample(
-      self.tags_onehot[i],
-      self.unrecognized_tags_count[i],
-      self.reputation[i],
-      self.undeleted_answers[i],
-      self.user_life_days[i],
-      self.title[i],
-      self.text_content[i]
-    )
+    return {
+      "tags_onehot": self.tags_onehot[i],
+      "unrecognized_tags_count": self.unrecognized_tags_count[i],
+      "reputation": self.reputation[i],
+      "undeleted_answers": self.undeleted_answers[i],
+      "user_life_days": self.user_life_days[i],
+      "title": self.title[i],
+      "text_content": self.text_content[i]
+    }
