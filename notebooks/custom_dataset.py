@@ -52,6 +52,9 @@ class GithubDataset(Dataset):
     self.title = df['Title'].to_numpy()
     self.text_content = df['BodyMarkdown'].to_numpy()
     
+    # Saving statuses
+    self.statuses = df['OpenStatus'].to_numpy()
+    
   def __len__(self):
     return len(self.tags_onehot)
 
@@ -63,5 +66,6 @@ class GithubDataset(Dataset):
       "undeleted_answers": self.undeleted_answers[i],
       "user_life_days": self.user_life_days[i],
       "title": self.title[i],
-      "text_content": self.text_content[i]
+      "text_content": self.text_content[i],
+      "status": self.statuses[i]
     }
