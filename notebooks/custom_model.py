@@ -6,12 +6,12 @@ class AutoCompositeModel(nn.Module):
     super(AutoCompositeModel, self).__init__()
     
     self.device = device
-    self.model_content = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels=64)
-    self.model_title = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels=32)
+    # self.model_content = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels=64)
+    # self.model_title = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels=32)
     
     self.my_new_layers = nn.Sequential(
-      nn.LayerNorm(64),
-      nn.Linear(64, 128),
+      # nn.LayerNorm(128),
+      nn.Linear(128, 128),
       nn.ReLU(),
       nn.Linear(128, 64),
       nn.ReLU(),
@@ -19,8 +19,10 @@ class AutoCompositeModel(nn.Module):
     )
   
   def forward(self, x):
-    x = self.model_content(x).logits.to(self.device)
     print(x)
+    print(x.dtype)
+    
+    # x = self.model_content(x).logits.to(self.device)
     x = self.my_new_layers(x)
-    print(x)
+    
     return x
