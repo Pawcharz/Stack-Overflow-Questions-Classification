@@ -34,7 +34,7 @@ class Trainer():
     self.epoch_index = epoch_index
     
     
-  def train_one_epoch(self, logging_frequency):
+  def train_one_epoch(self, logging_frequency, evaluate_when_logging: bool):
     running_loss = 0.
     running_accuracy_all = 0.
     running_accuracy = 0.
@@ -70,6 +70,8 @@ class Trainer():
 
       # Gather data and report
       running_loss += loss.item()
+      
+      # print(running_loss)
       running_accuracy += training_accuracy
       running_accuracy_all += training_accuracy
       # print('batch {}', i)
@@ -78,8 +80,12 @@ class Trainer():
         last_loss = running_loss / logging_frequency # loss per batch
         last_accuracy = running_accuracy / logging_frequency # accuracy per batch
         
-        avg_vloss, avg_vacc = self.evaluate_model()
-        print(' batch {} loss: {} vloss: {} training_accuracy: {} validation accuracy {}'.format(i + 1, last_loss, avg_vloss, last_accuracy, avg_vacc))
+        if evaluate_when_logging == True:
+          avg_vloss, avg_vacc = self.evaluate_model()
+          print(' batch {} training_loss: {} validation_loss: {} training_accuracy: {} validation_accuracy {}'.format(i + 1, last_loss, avg_vloss, last_accuracy, avg_vacc))
+        else:
+          print(' batch {} training_loss: {} training_accuracy: {}'.format(i + 1, last_loss, last_accuracy))
+          
         tb_x = self.epoch_index * len(self.config.training_loader) + i + 1
         sum_writer.add_scalar('Loss/train', last_loss, tb_x)
         running_loss = 0.
