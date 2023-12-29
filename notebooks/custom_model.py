@@ -18,10 +18,7 @@ class AutoCompositeModel(nn.Module):
       nn.Linear(64, 5)
     )
   
-  def forward(self, x):
-    print(x)
-    print(x.dtype)
-    
+  def forward(self, x):    
     # x = self.model_content(x).logits.to(self.device)
     x = self.my_new_layers(x)
     
