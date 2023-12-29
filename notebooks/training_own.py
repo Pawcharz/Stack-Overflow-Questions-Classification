@@ -24,13 +24,14 @@ class TrainerConfiguration():
     self.device = device
 
 class Trainer():
-  def __init__(self, model, trainer_configuration: TrainerConfiguration, input_column, output_column):
+  def __init__(self, model, trainer_configuration: TrainerConfiguration, input_column, output_column, epoch_index=0):
     
     self.config = trainer_configuration
     self.model = model.to(self.config.device)
     
     self.input_column = input_column
     self.output_column = output_column
+    self.epoch_index = epoch_index
     
     
   def train_one_epoch(self, logging_frequency):
@@ -79,12 +80,14 @@ class Trainer():
         
         avg_vloss, avg_vacc = self.evaluate_model()
         print(' batch {} loss: {} vloss: {} training_accuracy: {} validation accuracy {}'.format(i + 1, last_loss, avg_vloss, last_accuracy, avg_vacc))
-        tb_x = self.config.epoch_index * len(self.config.training_loader) + i + 1
+        tb_x = self.epoch_index * len(self.config.training_loader) + i + 1
         sum_writer.add_scalar('Loss/train', last_loss, tb_x)
         running_loss = 0.
         running_accuracy = 0.
     
     accuracy_all = running_accuracy_all / len(self.config.training_loader)
+    
+    self.epoch_index += 1
     return last_loss, accuracy_all
 
   def evaluate_model(self):
