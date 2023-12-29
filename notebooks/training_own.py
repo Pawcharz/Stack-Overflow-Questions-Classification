@@ -48,9 +48,7 @@ class Trainer():
     # torch.tensor(tokenized_test_dataset['input_ids'][:10]).float().to(device)
       # Every data instance is an input + label pair
       
-      # print(data[self.input_column])
-      inputs = torch.stack(data[self.input_column], 1).float().to(self.config.device)
-      # print(inputs)
+      inputs = torch.stack(data[self.input_column], 1).long().to(self.config.device) # FIX - .long() etc <- move it to the dataset procesing part. Here, only stack + device
       labels = data[self.output_column].to(self.config.device) # torch.stack(data[self.output_column]).float().to(self.config.device)
     
       # Zero your gradients for every batch!
