@@ -44,13 +44,14 @@ class Trainer():
     # Here, we use enumerate(training_loader) instead of
     # iter(training_loader) so that we can track the batch
     # index and do some intra-epoch reporting
+    
+    self.model.train(True)
     for i, data in enumerate(self.config.training_loader):
     
-    # torch.tensor(tokenized_test_dataset['input_ids'][:10]).float().to(device)
       # Every data instance is an input + label pair
       
       inputs = torch.stack(data[self.input_column], 1).float().to(self.config.device) # FIX - .long() etc <- move it to the dataset procesing part. Here, only stack + device
-      labels = data[self.output_column].to(self.config.device) # torch.stack(data[self.output_column]).float().to(self.config.device)
+      labels = data[self.output_column].to(self.config.device)
     
       # Zero your gradients for every batch!
       self.config.optimizer.zero_grad()
@@ -60,9 +61,7 @@ class Trainer():
 
         # Compute the loss and its gradients
         loss = self.config.loss_fn(outputs, labels)
-        # print(loss)
         loss.backward()
-      # torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1e-2)
       
       training_accuracy = self.config.accuracy_metric(outputs, labels)
 
@@ -72,10 +71,8 @@ class Trainer():
       # Gather data and report
       running_loss += loss.item()
       
-      # print(running_loss)
       running_accuracy += training_accuracy
       running_accuracy_all += training_accuracy
-      # print('batch {}', i)
       
       if (i+1) % logging_frequency == 0:
         last_loss = running_loss / logging_frequency # loss per batch
@@ -83,6 +80,7 @@ class Trainer():
         
         if evaluate_when_logging == True:
           avg_vloss, avg_vacc = self.evaluate_model()
+          self.model.train(True)
           print(' batch {} training_loss: {} validation_loss: {} training_accuracy: {} validation_accuracy {}'.format(i + 1, last_loss, avg_vloss, last_accuracy, avg_vacc))
         else:
           print(' batch {} training_loss: {} training_accuracy: {}'.format(i + 1, last_loss, last_accuracy))
@@ -96,6 +94,38 @@ class Trainer():
     
     self.epoch_index += 1
     return last_loss, accuracy_all
+  
+  
+  def train_many_epochs(self, epochs, logging_frequency, evaluate_when_logging: bool):
+    best_vloss = 1_000_000.
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+
+    for epoch_number in range(epochs):
+      print('EPOCH {}:'.format(epoch_number + 1))
+
+      # Make sure gradient tracking is on, and do a pass over the data
+      avg_loss, avg_acc = self.train_one_epoch(logging_frequency, evaluate_when_logging=evaluate_when_logging)
+
+
+      avg_vloss, avg_vacc = self.evaluate_model()
+      print('LOSS train {} valid {} ACCURACY train {} validation {}'.format(avg_loss, avg_vloss, avg_acc, avg_vacc))
+
+      # Log the running loss averaged per batch
+      # for both training and validation
+      sum_writer.add_scalars(
+        'Training vs. Validation Loss',
+        { 'Training' : avg_loss, 'Validation' : avg_vloss },
+        epoch_number + 1
+      )
+      sum_writer.flush()
+
+      # Track best performance, and save the model's state
+      if avg_vloss < best_vloss:
+        best_vloss = avg_vloss
+        model_path = 'model_{}_{}'.format(timestamp, epoch_number)
+        torch.save(self.model.state_dict(), model_path)
+
+      epoch_number += 1
 
   def evaluate_model(self):
     
@@ -124,57 +154,6 @@ class Trainer():
     
     return [avg_vloss, avg_vacc]
 
-
-
-def train_many_epochs(epochs, model, training_loader, validation_loader, optimizer, loss_fn, accuracy_metric, cuda_device, epoch_index, logging_frequency):
-  best_vloss = 1_000_000.
-  timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-
-  for epoch_number in range(epochs):
-    print('EPOCH {}:'.format(epoch_number + 1))
-
-    # Make sure gradient tracking is on, and do a pass over the data
-    model.train(True)
-    avg_loss, avg_acc = train_one_epoch(
-      model=model,
-      training_loader=training_loader,
-      validation_loader=validation_loader,
-      optimizer=optimizer,
-      loss_fn=loss_fn,
-      accuracy_metric=accuracy_metric,
-      cuda_device=cuda_device,
-      epoch_index=epoch_index,
-      logging_frequency=logging_frequency
-    )
-   
-
-    avg_vloss, avg_vacc = evaluate_model(
-      model=model,
-      validation_loader=validation_loader,
-      loss_fn=loss_fn,
-      accuracy_metric=accuracy_metric,
-      cuda_device=cuda_device
-    )
-    print('LOSS train {} valid {} ACCURACY train {} validation {}'.format(avg_loss, avg_vloss, avg_acc, avg_vacc))
-
-    # Log the running loss averaged per batch
-    # for both training and validation
-    sum_writer.add_scalars(
-      'Training vs. Validation Loss',
-      { 'Training' : avg_loss, 'Validation' : avg_vloss },
-      epoch_number + 1
-    )
-    sum_writer.flush()
-
-    # Track best performance, and save the model's state
-    if avg_vloss < best_vloss:
-      best_vloss = avg_vloss
-      model_path = 'model_{}_{}'.format(timestamp, epoch_number)
-      torch.save(model.state_dict(), model_path)
-
-    epoch_number += 1
-    
-
 def get_model_params(model):
   pp=0
   for p in list(model.parameters()):
@@ -183,4 +162,3 @@ def get_model_params(model):
       nn = nn*s
     pp += nn
   return pp
-  
