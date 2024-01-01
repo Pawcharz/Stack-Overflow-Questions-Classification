@@ -48,7 +48,7 @@ class Trainer():
     # torch.tensor(tokenized_test_dataset['input_ids'][:10]).float().to(device)
       # Every data instance is an input + label pair
       
-      inputs = torch.stack(data[self.input_column], 1).long().to(self.config.device) # FIX - .long() etc <- move it to the dataset procesing part. Here, only stack + device
+      inputs = torch.stack(data[self.input_column], 1).float().to(self.config.device) # FIX - .long() etc <- move it to the dataset procesing part. Here, only stack + device
       labels = data[self.output_column].to(self.config.device) # torch.stack(data[self.output_column]).float().to(self.config.device)
     
       # Zero your gradients for every batch!
@@ -59,7 +59,9 @@ class Trainer():
 
       # Compute the loss and its gradients
       loss = self.config.loss_fn(outputs, labels)
+      # print(loss)
       loss.backward()
+      # torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1e-2)
       
       training_accuracy = self.config.accuracy_metric(outputs, labels)
 
