@@ -1,4 +1,5 @@
 import torch
+from torch import autograd
 import numpy as np
 from datetime import datetime
 
@@ -53,14 +54,14 @@ class Trainer():
     
       # Zero your gradients for every batch!
       self.config.optimizer.zero_grad()
+      with autograd.detect_anomaly():
+        # Make predictions for this batch
+        outputs = self.model(inputs)
 
-      # Make predictions for this batch
-      outputs = self.model(inputs)
-
-      # Compute the loss and its gradients
-      loss = self.config.loss_fn(outputs, labels)
-      # print(loss)
-      loss.backward()
+        # Compute the loss and its gradients
+        loss = self.config.loss_fn(outputs, labels)
+        # print(loss)
+        loss.backward()
       # torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1e-2)
       
       training_accuracy = self.config.accuracy_metric(outputs, labels)
