@@ -45,10 +45,13 @@ class AutoCompositeModel(nn.Module):
     # self.my_new_layers = nn.Sequential(
     #   nn.Linear(128, 5),
     # )
-  def forward(self, x):
-
+  def forward(self, inputs):
+    # print(inputs)
     # x = self.lstm(x)[0]
-    x = self.transformerEncoder(x)
+    
+    text_content = inputs['content_input_ids']
+    print(inputs)
+    x = self.transformerEncoder(text_content)
     
     x = self.test_model(x)
     
