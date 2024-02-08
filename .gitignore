@@ -1,2 +1,3 @@
 data
 notebooks/text_content_model
+notebooks/__pycache__
