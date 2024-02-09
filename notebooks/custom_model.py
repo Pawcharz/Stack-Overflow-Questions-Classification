@@ -46,13 +46,10 @@ class AutoCompositeModel(nn.Module):
     #   nn.Linear(128, 5),
     # )
   def forward(self, inputs):
-    # print(inputs)
     # x = self.lstm(x)[0]
     
-    text_content = inputs['content_input_ids']
-    print(inputs)
-    x = self.transformerEncoder(text_content)
-    
+    text_content = torch.tensor(inputs['content_input_ids']).to(self.device).float()
+    x = self.transformerEncoder(text_content).float()    
     x = self.test_model(x)
     
     return x

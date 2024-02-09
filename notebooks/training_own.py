@@ -50,43 +50,17 @@ class Trainer():
     for i, data in enumerate(self.config.training_loader):
     
       # Every data instance is an input + label pair
-      
-      inputs = dict()
-      # print(data)
-      for j, column_name in enumerate(self.input_columns):
-        # print(column_name)
-        # print(data[:])
-        # print(data[:][column_name])
-        inputs[column_name] = [None] * len(data)
-        for z, batch_elem in enumerate(data):
-          # print(batch_elem)
-          inputs[column_name][z] = torch.tensor(batch_elem[column_name]).to(self.config.device)
-          # inputs[column_name][z] = torch.stack(batch_elem[column_name], 1).to(self.config.device)
-          
-        print("column_name", column_name)
-        print("inputs[column_name]", inputs[column_name])
-        print("len(inputs[column_name])", len(inputs[column_name]))
-        print("len(inputs[column_name][0])", len(inputs[column_name][0]))
-        print("len(inputs[column_name][1])", len(inputs[column_name][1]))
-        # inputs[column_name] = torch.tensor(inputs[column_name])
-        inputs[column_name] = torch.stack(inputs[column_name], 1)#.float().to(self.config.device)
-      
-      # inputs = torch.stack(data[self.input_columns], 1).float().to(self.config.device) # FIX - .long() etc <- move it to the dataset procesing part. Here, only stack + device
-      print("inputs", inputs)
-      # inputs = torch.stack(data[self.input_columns], 1).float().to(self.config.device) # FIX - .long() etc <- move it to the dataset procesing part. Here, only stack + device
+      inputs = dict((k, torch.tensor(data[k]).long().to(self.config.device)) for k in self.input_columns)
+
       labels = [None] * len(data)
-      for z, batch_elem in enumerate(data):
-        # print(batch_elem)
-        labels[z] = batch_elem[self.output_column]
-      # labels = data[self.output_column].to(self.config.device)
-    
+      labels = torch.tensor(data[self.output_column]).long().to(self.config.device)
       print(labels)
       
       # Zero your gradients for every batch!
       self.config.optimizer.zero_grad()
       with autograd.detect_anomaly():
         # Make predictions for this batch
-        outputs = self.model(inputs)
+        outputs = self.model(inputs).float()
 
         # Compute the loss and its gradients
         loss = self.config.loss_fn(outputs, labels)
