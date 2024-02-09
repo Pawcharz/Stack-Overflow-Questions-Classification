@@ -54,17 +54,16 @@ class Trainer():
 
       labels = [None] * len(data)
       labels = torch.tensor(data[self.output_column]).long().to(self.config.device)
-      print(labels)
       
       # Zero your gradients for every batch!
       self.config.optimizer.zero_grad()
-      with autograd.detect_anomaly():
-        # Make predictions for this batch
-        outputs = self.model(inputs).float()
+      
+      # Make predictions for this batch
+      outputs = self.model(inputs).float()
 
-        # Compute the loss and its gradients
-        loss = self.config.loss_fn(outputs, labels)
-        loss.backward()
+      # Compute the loss and its gradients
+      loss = self.config.loss_fn(outputs, labels)
+      loss.backward()
       
       training_accuracy = self.config.accuracy_metric(outputs, labels)
 
