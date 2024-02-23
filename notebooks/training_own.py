@@ -48,7 +48,7 @@ class Trainer():
     self.model.train(True)
     # print(self.config.training_loader)
     for i, data in enumerate(self.config.training_loader):
-    
+          
       # print(data)
       # Every data instance is an input + label pair
       inputs = dict((k, torch.tensor(data[k]).long().to(self.config.device)) for k in self.input_columns)
@@ -140,17 +140,22 @@ class Trainer():
     self.model.eval()
     
     # Disable gradient computation and reduce memory consumption.
-    with torch.no_grad():
-      for i, vdata in enumerate(self.config.validation_loader):
-        vinputs = torch.stack(vdata[self.input_column], 1).float().to(self.config.device)
-        vlabels = vdata[self.output_column].to(self.config.device)
-        voutputs = self.model(vinputs)
-        
-        vloss = self.config.loss_fn(voutputs, vlabels)
-        running_vloss += vloss
-        
-        vacc = self.config.accuracy_metric(voutputs, vlabels)
-        running_vacc += vacc
+    # with torch.no_grad():
+    for i, vdata in enumerate(self.config.validation_loader):
+      
+      # for k in self.input_columns:
+      #   print(k, type(vdata[k]), vdata[k])
+      #   print(to_my_tensor(vdata[k], self.config.device))
+      
+      vinputs = dict((k, to_my_tensor(vdata[k], self.config.device)) for k in self.input_columns)
+      vlabels = torch.tensor(vdata[self.output_column]).long().to(self.config.device)
+      voutputs = self.model(vinputs)
+      
+      vloss = self.config.loss_fn(voutputs, vlabels)
+      running_vloss += vloss
+      
+      vacc = self.config.accuracy_metric(voutputs, vlabels)
+      running_vacc += vacc
 
     avg_vloss = running_vloss / (i + 1)
     avg_vacc = running_vacc / (i + 1)
@@ -165,3 +170,12 @@ def get_model_params(model):
       nn = nn*s
     pp += nn
   return pp
+
+def to_my_tensor(elem, device):
+  if torch.is_tensor(elem):
+    return elem.long().to(device)
+
+  if (isinstance(elem, list)) and (torch.is_tensor(elem[0])):
+    return torch.stack(elem, dim=1).long().to(device)
+  
+  return torch.tensor(elem)
