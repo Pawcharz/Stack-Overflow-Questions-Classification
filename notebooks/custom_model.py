@@ -33,14 +33,22 @@ class NumericalPartModel(nn.Module):
     
     self.device = device
     
+    # self.forward_layer = nn.Sequential(
+    #   nn.Linear(4, 128),
+    #   nn.ReLU(),
+    #   nn.Linear(128, 256),
+    #   nn.ReLU(),
+    #   nn.Linear(256, 128),
+    #   nn.ReLU(),
+    #   nn.Linear(128, 5),
+    # )
+    
     self.forward_layer = nn.Sequential(
-      nn.Linear(4, 128),
+      nn.Linear(4, 16),
       nn.ReLU(),
-      nn.Linear(128, 256),
+      nn.Linear(16, 16),
       nn.ReLU(),
-      nn.Linear(256, 128),
-      nn.ReLU(),
-      nn.Linear(128, 5),
+      nn.Linear(16, 5),
     )
   def forward(self, inputs):
         
