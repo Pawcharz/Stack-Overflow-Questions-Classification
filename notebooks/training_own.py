@@ -25,12 +25,12 @@ class TrainerConfiguration():
     self.device = device
 
 class Trainer():
-  def __init__(self, model, trainer_configuration: TrainerConfiguration, input_column, output_column, epoch_index=0):
+  def __init__(self, model, trainer_configuration: TrainerConfiguration, input_columns, output_column, epoch_index=0):
     
     self.config = trainer_configuration
     self.model = model.to(self.config.device)
     
-    self.input_column = input_column
+    self.input_columns = input_columns
     self.output_column = output_column
     self.epoch_index = epoch_index
     
@@ -46,22 +46,25 @@ class Trainer():
     # index and do some intra-epoch reporting
     
     self.model.train(True)
+    # print(self.config.training_loader)
     for i, data in enumerate(self.config.training_loader):
-    
+          
+      # print(data)
       # Every data instance is an input + label pair
+      inputs = dict((k, torch.tensor(data[k]).long().to(self.config.device)) for k in self.input_columns)
+
+      labels = [None] * len(data)
+      labels = torch.tensor(data[self.output_column]).long().to(self.config.device)
       
-      inputs = torch.stack(data[self.input_column], 1).float().to(self.config.device) # FIX - .long() etc <- move it to the dataset procesing part. Here, only stack + device
-      labels = data[self.output_column].to(self.config.device)
-    
       # Zero your gradients for every batch!
       self.config.optimizer.zero_grad()
-      with autograd.detect_anomaly():
-        # Make predictions for this batch
-        outputs = self.model(inputs)
+      
+      # Make predictions for this batch
+      outputs = self.model(inputs).float()
 
-        # Compute the loss and its gradients
-        loss = self.config.loss_fn(outputs, labels)
-        loss.backward()
+      # Compute the loss and its gradients
+      loss = self.config.loss_fn(outputs, labels)
+      loss.backward()
       
       training_accuracy = self.config.accuracy_metric(outputs, labels)
 
@@ -137,17 +140,22 @@ class Trainer():
     self.model.eval()
     
     # Disable gradient computation and reduce memory consumption.
-    with torch.no_grad():
-      for i, vdata in enumerate(self.config.validation_loader):
-        vinputs = torch.stack(vdata[self.input_column], 1).float().to(self.config.device)
-        vlabels = vdata[self.output_column].to(self.config.device)
-        voutputs = self.model(vinputs)
-        
-        vloss = self.config.loss_fn(voutputs, vlabels)
-        running_vloss += vloss
-        
-        vacc = self.config.accuracy_metric(voutputs, vlabels)
-        running_vacc += vacc
+    # with torch.no_grad():
+    for i, vdata in enumerate(self.config.validation_loader):
+      
+      # for k in self.input_columns:
+      #   print(k, type(vdata[k]), vdata[k])
+      #   print(to_my_tensor(vdata[k], self.config.device))
+      
+      vinputs = dict((k, to_my_tensor(vdata[k], self.config.device)) for k in self.input_columns)
+      vlabels = torch.tensor(vdata[self.output_column]).long().to(self.config.device)
+      voutputs = self.model(vinputs)
+      
+      vloss = self.config.loss_fn(voutputs, vlabels)
+      running_vloss += vloss
+      
+      vacc = self.config.accuracy_metric(voutputs, vlabels)
+      running_vacc += vacc
 
     avg_vloss = running_vloss / (i + 1)
     avg_vacc = running_vacc / (i + 1)
@@ -162,3 +170,12 @@ def get_model_params(model):
       nn = nn*s
     pp += nn
   return pp
+
+def to_my_tensor(elem, device):
+  if torch.is_tensor(elem):
+    return elem.long().to(device)
+
+  if (isinstance(elem, list)) and (torch.is_tensor(elem[0])):
+    return torch.stack(elem, dim=1).long().to(device)
+  
+  return torch.tensor(elem)
