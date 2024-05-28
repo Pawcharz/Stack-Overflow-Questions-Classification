@@ -47,9 +47,12 @@ class Trainer():
     
     self.model.train(True)
     # print(self.config.training_loader)
+    
+    
+    # print(self.config.training_loader)
     for i, data in enumerate(self.config.training_loader):
           
-      # print(data)
+      # print(i, data)
       # Every data instance is an input + label pair
       inputs = dict((k, torch.tensor(data[k]).long().to(self.config.device)) for k in self.input_columns)
 
